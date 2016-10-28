@@ -1,34 +1,22 @@
 const EventEmitter = require('events');
 const request = require('request-promise');
-const openUrl = require('open');
 
 const statusOk = (status) => (status >= 100 && status <= 399);
 
-const testRequest = emitter => url => {
+const testRequest = (emitter, url) => {
   request(url, { simple: false, resolveWithFullResponse: true })
     .then(({statusCode}) => {
       statusOk(statusCode)
         ? emitter.emit('success', { url, statusCode })
         : emitter.emit('failure', { url, statusCode });
     })
-    .catch(error => {
+    .catch((error) => {
       emitter.emit('error', { url, error });
-      console.error(error);
-      process.exit(1);
-    })
-}
+    });
+};
 
-module.exports = (urls, opts) => {
+module.exports = (urls) => {
   const emitter = new EventEmitter();
-  const options = Object.assign({}, {
-    open: false
-  }, opts);
-
-  if (options.open) {
-    urls.forEach(openUrl)
-  }
-
-  urls.forEach(testRequest(emitter))
-
+  urls.forEach(url => testRequest(emitter, url));
   return emitter;
 };
